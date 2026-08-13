@@ -1,6 +1,7 @@
-$pyScript = @"
 # -*- coding: utf-8 -*-
 import os, json, time, re, traceback
+from threading import Thread
+from flask import Flask
 import gspread
 from datetime import datetime
 from telegram import Update, ReplyKeyboardMarkup
@@ -8,10 +9,22 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 from openai import OpenAI
 from groq import Groq
 
-TELEGRAM_TOKEN = "8669976589:AAGNJ4jaDIJpHwm_m7T9q97a_D5DqfXLeGA"
-DEEPSEEK_API_KEY = "sk-fb624f61e71447869482eb55c1f9179f"
-GROQ_API_KEY = "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"
-ADMIN_ID = 686359645
+# Render Environment Variables orqali olinadigan xavfsiz sozlamalar
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8669976589:AAGNJ4jaDIJpHwm_m7T9q97a_D5DqfXLeGA")
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-fb624f61e71447869482eb55c1f9179f")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
+ADMIN_ID = int(os.environ.get("ADMIN_ID", 686359645))
+
+# Render bepul rejimda port so'ragani uchun kichik HTTP server
+web_app = Flask('')
+
+@web_app.route('/')
+def home():
+    return "Bot status: Active"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    web_app.run(host='0.0.0.0', port=port)
 
 google_credentials_dict = {
   "type": "service_account",
@@ -81,7 +94,6 @@ def get_sheet_summary(sheet_obj):
     if not rows or len(rows) <= 1:
         return "Hozircha hech qanday ma'lumot yozilmagan."
     
-    # Oxirgi 15 ta yozuvni olish
     headers = rows[0]
     data_str = " | ".join(headers) + "\n" + "-"*30 + "\n"
     for r in rows[-15:]:
@@ -207,23 +219,8 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-import os
-from threading import Thread
-from flask import Flask
-
-# Render bepul rejimda ishlashi uchun mini web-server
-web_app = Flask('')
-
-@web_app.route('/')
-def home():
-    return "Bot status: Active"
-
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    web_app.run(host='0.0.0.0', port=port)
-
 if __name__ == '__main__':
-    # Web serverni alohida potokda ishga tushiramiz
+    # Web serverni alohida potokda ishga tushiramiz (Render bepul rejim talabi)
     Thread(target=run_web).start()
     
     # Telegram botni ishga tushiramiz
