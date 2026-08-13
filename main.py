@@ -207,15 +207,29 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if os.path.exists(file_path):
             os.remove(file_path)
 
+import os
+from threading import Thread
+from flask import Flask
+
+# Render bepul rejimda ishlashi uchun mini web-server
+web_app = Flask('')
+
+@web_app.route('/')
+def home():
+    return "Bot status: Active"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    web_app.run(host='0.0.0.0', port=port)
+
 if __name__ == '__main__':
+    # Web serverni alohida potokda ishga tushiramiz
+    Thread(target=run_web).start()
+    
+    # Telegram botni ishga tushiramiz
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     print("Avtonom HRD Ustoz va Kotiba Bot ishga tushdi...")
     app.run_polling()
-"@
-
-$bytes = [System.Text.Encoding]::UTF8.GetBytes($pyScript)
-$base64 = [Convert]::ToBase64String($bytes)
-python -c "import base64; exec(base64.b64decode('$base64').decode('utf-8'))"
