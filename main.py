@@ -32,6 +32,7 @@ if GROQ_API_KEY:
 deepseek_client = openai.OpenAI(
     api_key=DEEPSEEK_API_KEY,
     base_url="https://api.deepseek.com"
+    timeout=15.0
 )
 
 # 3. GOOGLE SHEETS SETUP
